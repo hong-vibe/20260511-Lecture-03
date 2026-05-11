@@ -209,4 +209,11 @@ h1 {
   color: #b0bec5; /* 너무 밝지 않은 회색으로 본문 표시 */
   line-height: 1.5;
   flex-grow: 1; /* 설명이 짧아도 카드의 높이를 맞추기 위해 공간을 채움 */
+  
+  /* [추가] 텍스트가 너무 길면 5줄까지만 보여주고 말줄임표(...) 표시 */
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
