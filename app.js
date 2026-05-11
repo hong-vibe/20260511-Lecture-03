@@ -67,7 +67,7 @@ function renderRepos(items) {
 
 /**
  * 검색을 통합해서 관리하는 비동기 함수입니다. (handleSearch)
- * 입력값 검증, 데이터 요청, 화면 렌더링을 모두 제어합니다.
+ * 입력값 검증, 데이터 요청, 화면 렌더링 및 상태(로딩, 에러 등)를 모두 제어합니다.
  */
 async function handleSearch() {
   // 1. 입력창(searchInput)에 적힌 텍스트를 가져오고, trim()으로 앞뒤 공백을 없앱니다.
@@ -79,33 +79,45 @@ async function handleSearch() {
     statusMessage.className = 'status-message error';
     statusMessage.textContent = '⚠️ 검색어를 입력해 주세요.';
     repoList.innerHTML = ''; // 이전 검색 결과 화면에서 지우기
-  } else {
-    console.log("검색어:", keyword);
-    
-    // 검색 시작 시 화면 상태 메시지 업데이트
-    statusMessage.className = 'status-message';
-    statusMessage.textContent = '⏳ 검색 중...';
-    repoList.innerHTML = '';
+    return; // 더 이상 진행하지 않고 함수를 종료합니다.
+  }
 
-    try {
-      // 3. fetchRepos 함수로 데이터를 가져옵니다.
-      const data = await fetchRepos(keyword);
+  // ---------------------------------------------------------
+  // 3. 검색 시작 준비 단계
+  // ---------------------------------------------------------
+  // [조건 5] 검색 중에는 버튼을 비활성화하여 중복 클릭을 방지합니다.
+  searchBtn.disabled = true;
+  
+  // [조건 7] 검색을 새로 시작할 때는 이전 결과 목록을 깨끗이 비웁니다.
+  repoList.innerHTML = '';
+  
+  // [조건 1] 사용자에게 검색이 시작되었음을 알리는 메시지를 표시합니다.
+  statusMessage.className = 'status-message';
+  statusMessage.textContent = '⏳ 검색 중입니다...';
 
-      if (data.items.length === 0) {
-        statusMessage.textContent = `🤔 '${keyword}'에 대한 결과가 없습니다.`;
-        return;
-      }
+  // [조건 4] try/catch/finally 구조를 사용하여 에러를 처리하고 마무리를 보장합니다.
+  try {
+    // 4. fetchRepos 함수를 호출하여 데이터를 비동기적으로 가져옵니다.
+    const data = await fetchRepos(keyword);
 
-      // 4. 받아온 데이터를 renderRepos 함수에 전달하여 화면에 그립니다.
-      statusMessage.textContent = `✅ '${keyword}' 검색 완료!`;
+    // [조건 2] 가져온 데이터가 하나도 없는 경우
+    if (data.items.length === 0) {
+      statusMessage.textContent = '🤔 검색 결과가 없습니다.';
+    } else {
+      // 5. 검색 결과가 있다면 화면에 카드를 그립니다.
+      statusMessage.textContent = `✅ '${keyword}' 검색을 완료했습니다!`;
       renderRepos(data.items);
-
-    } catch (error) {
-      // 5. 오류 처리는 요구사항에 따라 console.error로 유지합니다.
-      console.error('검색 중 오류 발생:', error);
-      statusMessage.className = 'status-message error';
-      statusMessage.textContent = '🚨 오류가 발생했습니다.';
     }
+
+  } catch (error) {
+    // [조건 3] API 요청 중 에러가 발생한 경우 (네트워크 문제 등)
+    console.error('검색 오류 발생:', error);
+    statusMessage.className = 'status-message error';
+    statusMessage.textContent = '🚨 데이터를 가져오지 못했습니다.';
+
+  } finally {
+    // [조건 6] 검색이 성공하든 실패하든 마지막에는 반드시 버튼을 다시 활성화합니다.
+    searchBtn.disabled = false;
   }
 }
 
