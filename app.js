@@ -240,28 +240,31 @@ async function handleSearch() {
 // -------------------------------------------------------------------
 
 /**
- * 인사이트 있는 개발 키워드 순위 변동 데이터입니다.
- * prevRank: 1주 전 순위, currRank: 현재 순위
+ * 5주간 개발 키워드 순위 변동 데이터입니다.
+ * ranks: [4주 전, 3주 전, 2주 전, 1주 전, 현재] 순위
  *
  * [인사이트 스토리]
- * - AI/LLM이 5위 → 1위로 폭발적 상승 (AI 붐 반영)
- * - TypeScript가 3위 → 2위로 꾸준한 상승 (타입 안전성 트렌드)
- * - Rust가 7위 → 3위로 급상승 (시스템 프로그래밍 관심 증가)
- * - Python이 1위 → 4위로 하락 (AI에 자리를 내줌, 여전히 강세)
- * - React가 2위 → 5위로 하락 (성숙기 진입, 안정세)
+ * - AI/LLM: 꾸준히 8위 → 1위로 폭발적 상승 (AI 붐)
+ * - TypeScript: 4위 → 2위로 점진적 상승 (타입 안전성 트렌드)
+ * - Rust: 9위 → 3위로 급상승 (시스템 프로그래밍 재조명)
+ * - Python: 1위 → 4위로 하락 (AI에 자리를 내줬으나 여전히 강세)
+ * - React: 2위 → 5위로 하락 (성숙기 진입)
  */
 const TREND_DATA = [
-  { name: 'AI / LLM',    prevRank: 5,  currRank: 1,  color: '#ffd54f' },
-  { name: 'TypeScript',  prevRank: 3,  currRank: 2,  color: '#64b5f6' },
-  { name: 'Rust',        prevRank: 7,  currRank: 3,  color: '#ff8a65' },
-  { name: 'Python',      prevRank: 1,  currRank: 4,  color: '#81c784' },
-  { name: 'React',       prevRank: 2,  currRank: 5,  color: '#4fc3f7' },
-  { name: 'Next.js',     prevRank: 4,  currRank: 6,  color: '#ce93d8' },
-  { name: 'Go (Golang)', prevRank: 6,  currRank: 7,  color: '#80cbc4' },
-  { name: 'Kubernetes',  prevRank: 8,  currRank: 8,  color: '#f48fb1' },
-  { name: 'Vue.js',      prevRank: 9,  currRank: 9,  color: '#a5d6a7' },
-  { name: 'Flutter',     prevRank: 10, currRank: 10, color: '#90caf9' },
+  { name: 'AI / LLM',    ranks: [8, 6, 4, 2, 1],  color: '#ffd54f' },
+  { name: 'TypeScript',  ranks: [4, 4, 3, 3, 2],  color: '#64b5f6' },
+  { name: 'Rust',        ranks: [9, 8, 7, 5, 3],  color: '#ff8a65' },
+  { name: 'Python',      ranks: [1, 1, 2, 3, 4],  color: '#81c784' },
+  { name: 'React',       ranks: [2, 2, 2, 4, 5],  color: '#4fc3f7' },
+  { name: 'Next.js',     ranks: [3, 3, 4, 4, 6],  color: '#ce93d8' },
+  { name: 'Go (Golang)', ranks: [5, 5, 6, 6, 7],  color: '#80cbc4' },
+  { name: 'Kubernetes',  ranks: [6, 7, 8, 8, 8],  color: '#f48fb1' },
+  { name: 'Vue.js',      ranks: [7, 9, 9, 9, 9],  color: '#a5d6a7' },
+  { name: 'Flutter',     ranks: [10, 10, 10, 10, 10], color: '#90caf9' },
 ];
+
+// X축 레이블 (5개 시점)
+const TREND_LABELS = ['4주 전', '3주 전', '2주 전', '1주 전', '현재'];
 
 /**
  * 트렌드 배지 리스트와 Bump Chart를 화면에 렌더링합니다.
@@ -270,10 +273,13 @@ function renderTrending() {
   const trendingList = document.getElementById('trendingList');
   trendingList.innerHTML = '';
 
-  const sorted = [...TREND_DATA].sort((a, b) => a.currRank - b.currRank);
+  // 현재 순위(ranks 마지막 값) 기준으로 정렬
+  const sorted = [...TREND_DATA].sort((a, b) => a.ranks.at(-1) - b.ranks.at(-1));
 
   sorted.forEach(item => {
-    const diff = item.prevRank - item.currRank;
+    const prevRank = item.ranks[0];       // 4주 전 순위
+    const currRank = item.ranks.at(-1);   // 현재 순위
+    const diff = prevRank - currRank;     // 양수 = 상승
 
     let changeHTML = '';
     if (diff > 0) {
@@ -287,9 +293,9 @@ function renderTrending() {
     const badge = document.createElement('div');
     badge.className = 'trend-badge';
     badge.style.borderColor = item.color + '66';
-    badge.title = `지난주 ${item.prevRank}위 → 현재 ${item.currRank}위`;
+    badge.title = `4주 전 ${prevRank}위 → 현재 ${currRank}위`;
     badge.innerHTML = `
-      <span class="rank">${item.currRank}위</span>
+      <span class="rank">${currRank}위</span>
       <span class="keyword">${item.name}</span>
       ${changeHTML}
     `;
@@ -306,41 +312,60 @@ function renderTrending() {
 }
 
 /**
- * Chart.js를 사용하여 Bump Chart(순위 변동 라인 차트)를 그립니다.
- * X축: '1주 전', '현재' / Y축: 1위(상단) ~ 10위(하단) 역순
+ * 마지막 데이터 포인트 옆에 키워드 이름을 표시하는 커스텀 플러그인
+ */
+const endLabelPlugin = {
+  id: 'endLabel',
+  afterDatasetsDraw(chart) {
+    const ctx = chart.ctx;
+    chart.data.datasets.forEach((dataset, i) => {
+      const meta = chart.getDatasetMeta(i);
+      if (!meta.hidden && meta.data.length > 0) {
+        const lastPoint = meta.data[meta.data.length - 1];
+        ctx.save();
+        ctx.fillStyle = dataset.borderColor;
+        ctx.font = 'bold 10px "Segoe UI", sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(dataset.label, lastPoint.x + 6, lastPoint.y + 4);
+        ctx.restore();
+      }
+    });
+  }
+};
+
+/**
+ * Chart.js를 사용하여 Bump Chart(5주 순위 변동 라인 차트)를 그립니다.
+ * X축: 4주 전 → 현재 (5개 시점)
+ * Y축: 1위(상단) ~ 10위(하단) 역순
  */
 function renderBumpChart(data) {
   const ctx = document.getElementById('rankChart').getContext('2d');
 
   new Chart(ctx, {
     type: 'line',
+    plugins: [endLabelPlugin], // 끝 레이블 플러그인 등록
     data: {
-      labels: ['1주 전', '현재'],
+      labels: TREND_LABELS,
       datasets: data.map(item => ({
         label: item.name,
-        data: [item.prevRank, item.currRank],
+        data: item.ranks,
         borderColor: item.color,
-        backgroundColor: item.color + '33',
-        borderWidth: item.currRank <= 3 ? 3 : 1.5,
-        pointRadius: 6,
-        pointHoverRadius: 9,
+        backgroundColor: 'transparent',
+        borderWidth: item.ranks.at(-1) <= 3 ? 2.5 : 1.2, // 상위권 굵게
+        pointRadius: 3,        // 점 크기 줄임
+        pointHoverRadius: 6,
         pointBackgroundColor: item.color,
-        tension: 0.2,
+        tension: 0.3,
       }))
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: {
+        padding: { right: 80 } // 끝 레이블 공간 확보
+      },
       plugins: {
-        legend: {
-          position: 'right',
-          labels: {
-            color: '#ccc',
-            font: { size: 11 },
-            boxWidth: 14,
-            padding: 10,
-          }
-        },
+        legend: { display: false }, // 범례 숨김 (끝 레이블로 대체)
         tooltip: {
           backgroundColor: '#1e1e1e',
           titleColor: '#ffd54f',
@@ -350,7 +375,8 @@ function renderBumpChart(data) {
           callbacks: {
             label: ctx => {
               const item = data[ctx.datasetIndex];
-              return ` ${ctx.dataset.label}: ${ctx.raw}위 (지난주 ${item.prevRank}위 → 현재 ${item.currRank}위)`;
+              const week = TREND_LABELS[ctx.dataIndex];
+              return ` ${ctx.dataset.label}: ${ctx.raw}위 (${week})`;
             }
           }
         }
@@ -358,10 +384,10 @@ function renderBumpChart(data) {
       scales: {
         x: {
           grid: { color: '#2a2a2a' },
-          ticks: { color: '#aaa', font: { size: 13, weight: 'bold' } }
+          ticks: { color: '#aaa', font: { size: 11 } }
         },
         y: {
-          reverse: true,
+          reverse: true,  // 1위가 맨 위
           min: 1,
           max: 10,
           grid: { color: '#2a2a2a' },

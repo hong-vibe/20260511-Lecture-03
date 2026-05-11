@@ -248,12 +248,13 @@ h1 {
   display: grid;
   gap: 30px;
   grid-template-columns: 1fr; /* 모바일: 1열 */
+  overflow: hidden; /* 자녀 요소가 바깥으로 나가지 않도록 */
 }
 
 /* 데스크톱: 2열 배치 */
 @media (min-width: 900px) {
   .trending-container {
-    grid-template-columns: 350px 1fr;
+    grid-template-columns: 300px 1fr; /* 배지 열을 조금 줄여 그래프 영역 확보 */
     align-items: start;
   }
 }
@@ -311,9 +312,13 @@ h1 {
   background: #1e1e1e;
   border: 1px solid #333;
   border-radius: 12px;
-  padding: 24px;
-  min-height: 420px;
+  padding: 20px 16px 20px 16px;
+  min-height: 380px;
+  max-height: 420px;
   position: relative;
+  min-width: 0;     /* 그리드 자녀에서 반드시 필요: 넘침 방지 */
+  overflow: hidden; /* 캔버스가 영역을 벗어나도 숨김 */
+  box-sizing: border-box;
 }
 
 .loading-text {
