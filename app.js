@@ -267,52 +267,39 @@ const TREND_DATA = [
 const TREND_LABELS = ['4주 전', '3주 전', '2주 전', '1주 전', '현재'];
 
 /**
- * 트렌드 배지 리스트와 Bump Chart를 화면에 렌더링합니다.
+ * Bump Chart를 화면에 렌더링합니다.
  */
 function renderTrending() {
-  const trendingList = document.getElementById('trendingList');
-  trendingList.innerHTML = '';
-
   // 현재 순위(ranks 마지막 값) 기준으로 정렬
   const sorted = [...TREND_DATA].sort((a, b) => a.ranks.at(-1) - b.ranks.at(-1));
-
-  sorted.forEach(item => {
-    const prevRank = item.ranks[0];       // 4주 전 순위
-    const currRank = item.ranks.at(-1);   // 현재 순위
-    const diff = prevRank - currRank;     // 양수 = 상승
-
-    let changeHTML = '';
-    if (diff > 0) {
-      changeHTML = `<span class="change up">▲ ${diff}</span>`;
-    } else if (diff < 0) {
-      changeHTML = `<span class="change down">▼ ${Math.abs(diff)}</span>`;
-    } else {
-      changeHTML = `<span class="change same">── </span>`;
-    }
-
-    const badge = document.createElement('div');
-    badge.className = 'trend-badge';
-    badge.style.borderColor = item.color + '66';
-    badge.title = `4주 전 ${prevRank}위 → 현재 ${currRank}위`;
-    badge.innerHTML = `
-      <span class="rank">${currRank}위</span>
-      <span class="keyword">${item.name}</span>
-      ${changeHTML}
-    `;
-    badge.style.cursor = 'pointer';
-    badge.onclick = () => {
-      searchInput.value = item.name.split('/')[0].trim();
-      handleSearch();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-    trendingList.appendChild(badge);
-  });
-
   renderBumpChart(sorted);
 }
 
 /**
- * 마지막 데이터 포인트 옆에 키워드 이름을 표시하는 커스텀 플러그인
+ * 첫 번째 데이터 포인트(왼쪽) 옆에 키워드 이름을 표시하는 커스텀 플러그인
+ */
+const startLabelPlugin = {
+  id: 'startLabel',
+  afterDatasetsDraw(chart) {
+    const ctx = chart.ctx;
+    chart.data.datasets.forEach((dataset, i) => {
+      const meta = chart.getDatasetMeta(i);
+      if (!meta.hidden && meta.data.length > 0) {
+        const firstPoint = meta.data[0];
+        ctx.save();
+        ctx.fillStyle = dataset.borderColor;
+        ctx.font = 'bold 11px "Segoe UI", sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(dataset.label, firstPoint.x - 8, firstPoint.y);
+        ctx.restore();
+      }
+    });
+  }
+};
+
+/**
+ * 마지막 데이터 포인트(오른쪽) 옆에 순위, 이름, 변동을 표시하는 커스텀 플러그인
  */
 const endLabelPlugin = {
   id: 'endLabel',
@@ -322,11 +309,40 @@ const endLabelPlugin = {
       const meta = chart.getDatasetMeta(i);
       if (!meta.hidden && meta.data.length > 0) {
         const lastPoint = meta.data[meta.data.length - 1];
+        
+        // 원본 데이터 찾기
+        const originalItem = TREND_DATA.find(d => d.name === dataset.label);
+        const prevRank = originalItem.ranks[0];
+        const currRank = originalItem.ranks.at(-1);
+        const diff = prevRank - currRank;
+        
+        let diffStr = '';
+        let diffColor = '#8A9BB0'; // 유지
+        if (diff > 0) {
+          diffStr = `▲ ${diff}`;
+          diffColor = '#3A7D44'; // 상승
+        } else if (diff < 0) {
+          diffStr = `▼ ${Math.abs(diff)}`;
+          diffColor = '#C0392B'; // 하락
+        } else {
+          diffStr = `-`;
+        }
+
         ctx.save();
-        ctx.fillStyle = dataset.borderColor;
-        ctx.font = 'bold 10px "Segoe UI", sans-serif';
+        ctx.textBaseline = 'middle';
         ctx.textAlign = 'left';
-        ctx.fillText(dataset.label, lastPoint.x + 6, lastPoint.y + 4);
+        
+        // 1. 순위 및 이름 쓰기 (선 색상)
+        ctx.font = 'bold 11px "Segoe UI", sans-serif';
+        ctx.fillStyle = dataset.borderColor;
+        const mainText = `${currRank}위 ${dataset.label}`;
+        ctx.fillText(mainText, lastPoint.x + 8, lastPoint.y);
+        
+        // 2. 변동 쓰기 (상태에 따른 색상)
+        const mainTextWidth = ctx.measureText(mainText + ' ').width;
+        ctx.fillStyle = diffColor;
+        ctx.fillText(diffStr, lastPoint.x + 8 + mainTextWidth, lastPoint.y);
+        
         ctx.restore();
       }
     });
@@ -343,7 +359,7 @@ function renderBumpChart(data) {
 
   new Chart(ctx, {
     type: 'line',
-    plugins: [endLabelPlugin], // 끝 레이블 플러그인 등록
+    plugins: [startLabelPlugin, endLabelPlugin], // 왼쪽, 오른쪽 레이블 플러그인
     data: {
       labels: TREND_LABELS,
       datasets: data.map(item => ({
@@ -351,18 +367,34 @@ function renderBumpChart(data) {
         data: item.ranks,
         borderColor: item.color,
         backgroundColor: 'transparent',
-        borderWidth: item.ranks.at(-1) <= 3 ? 2.5 : 1.2, // 상위권 굵게
-        pointRadius: 3,        // 점 크기 줄임
+        borderWidth: item.ranks.at(-1) <= 3 ? 2.5 : 1.2,
+        pointRadius: 3,
         pointHoverRadius: 6,
         pointBackgroundColor: item.color,
         tension: 0.3,
+        // 차트 선에 마우스 오버 시 포인터 변경용 확장 반경
+        hitRadius: 10,
       }))
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       layout: {
-        padding: { right: 80 }
+        padding: { left: 90, right: 120 } // 좌우 레이블 표시 공간 확보
+      },
+      // 마우스 오버 시 커서 변경
+      onHover: (e, elements) => {
+        e.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+      },
+      // 차트의 점이나 선 클릭 시 검색 실행
+      onClick: (e, elements, chart) => {
+        if (elements.length > 0) {
+          const datasetIndex = elements[0].datasetIndex;
+          const keyword = chart.data.datasets[datasetIndex].label;
+          searchInput.value = keyword.split('/')[0].trim(); // "AI / LLM" -> "AI"
+          handleSearch();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
       },
       plugins: {
         legend: { display: false },
@@ -391,11 +423,7 @@ function renderBumpChart(data) {
           min: 1,
           max: 10,
           grid: { color: '#EEF2F7' },
-          ticks: {
-            color: '#5A6A7E',
-            stepSize: 1,
-            callback: val => `${val}위`
-          }
+          ticks: { display: false } // y축 숫자(1위~10위) 숨김
         }
       }
     }

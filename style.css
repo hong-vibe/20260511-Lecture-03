@@ -246,77 +246,18 @@ h1 {
   margin-bottom: 8px;
   font-size: 22px;
   letter-spacing: -0.3px;
+  text-align: center;
 }
 
 .trend-subtitle {
   color: #6B7D90;
   font-size: 13px;
   margin-bottom: 28px;
+  text-align: center;
 }
 
 .trending-container {
-  display: grid;
-  gap: 30px;
-  grid-template-columns: 1fr;
-  overflow: hidden;
-}
-
-/* 데스크톱: 2열 배치 */
-@media (min-width: 900px) {
-  .trending-container {
-    grid-template-columns: 300px 1fr;
-    align-items: start;
-  }
-}
-
-/* 인기 키워드 리스트 (배지 형태) */
-.trending-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.trend-badge {
-  background: #FFFFFF;
-  border: 1.5px solid #DCE4ED;
-  padding: 9px 16px;
-  border-radius: 30px;
-  font-size: 13px;
-  color: #1A2332;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 1px 4px rgba(26, 35, 50, 0.06);
-}
-
-.trend-badge .rank {
-  font-weight: bold;
-  color: #2D5A8E;
-  min-width: 28px;
-}
-
-/* 순위 변동 인디케이터 */
-.trend-badge .change {
-  font-size: 11px;
-  font-weight: bold;
-  min-width: 32px;
-  text-align: center;
-}
-.trend-badge .change.up   { color: #3A7D44; } /* 상승: 포레스트 그린 */
-.trend-badge .change.down { color: #C0392B; } /* 하락: 딥 레드 */
-.trend-badge .change.same { color: #8A9BB0; } /* 유지: 뮤트 그레이 */
-
-.trend-badge .keyword {
-  font-weight: 500;
-}
-
-.trend-badge:hover {
-  border-color: #2D5A8E;
-  background: #F0F4FA;
-  transform: scale(1.04);
-  box-shadow: 0 3px 10px rgba(45, 90, 142, 0.12);
+  display: block; /* 1열 가득 채우기 */
 }
 
 /* 그래프 영역 */
