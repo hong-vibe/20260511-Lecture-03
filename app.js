@@ -65,11 +65,11 @@ function renderCards(items) {
   });
 }
 
-// -------------------------------------------------------------------
-// 검색 버튼 클릭 이벤트 설정
-// -------------------------------------------------------------------
-// 사용자가 'searchButton' 아이디를 가진 버튼을 클릭했을 때 작동하는 코드입니다.
-searchBtn.addEventListener('click', () => {
+/**
+ * 검색을 통합해서 관리하는 함수입니다. (handleSearch)
+ * 공통된 검색 로직을 이곳에 모아 중복 코드를 줄입니다.
+ */
+function handleSearch() {
   // 1. 입력창(searchInput)에 적힌 텍스트를 가져오고, trim()으로 앞뒤 공백을 없앱니다.
   const keyword = searchInput.value.trim();
   
@@ -86,11 +86,19 @@ searchBtn.addEventListener('click', () => {
     // (기존에 만들어둔 GitHub API 검색 함수를 실행하여 화면에 결과를 그립니다)
     searchRepositories(keyword);
   }
-});
+}
 
-// 엔터 키 입력 시 검색 실행 이벤트 (선택사항)
+// -------------------------------------------------------------------
+// 이벤트 연결 (Event Listeners)
+// -------------------------------------------------------------------
+
+// 검색 버튼 클릭 시 검색 함수(handleSearch) 실행
+searchBtn.addEventListener('click', handleSearch);
+
+// 입력창에서 키보드를 눌렀을 때 엔터 키인지 확인하여 검색 함수 실행
 searchInput.addEventListener('keypress', (event) => {
   if (event.key === 'Enter') {
-    searchBtn.click();
+    handleSearch();
   }
 });
+
