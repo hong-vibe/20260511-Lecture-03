@@ -65,16 +65,26 @@ function renderCards(items) {
   });
 }
 
-// 검색 버튼 클릭 이벤트
+// -------------------------------------------------------------------
+// 검색 버튼 클릭 이벤트 설정
+// -------------------------------------------------------------------
+// 사용자가 'searchButton' 아이디를 가진 버튼을 클릭했을 때 작동하는 코드입니다.
 searchBtn.addEventListener('click', () => {
+  // 1. 입력창(searchInput)에 적힌 텍스트를 가져오고, trim()으로 앞뒤 공백을 없앱니다.
   const keyword = searchInput.value.trim();
-  if (keyword) {
-    searchRepositories(keyword);
-  } else {
-    // 상태 메시지를 경고 모드로 변경하여 화면에 표시
+  
+  // 2. 만약 공백을 다 지웠는데도 텍스트가 비어있다면 (빈 문자열이라면)
+  if (keyword === "") {
+    // 3. 상태 메시지 영역(statusMessage)에 에러 스타일을 적용하고 문구를 띄웁니다.
     statusMessage.className = 'status-message error';
-    statusMessage.textContent = '⚠️ 검색어를 입력해주세요.';
-    repoList.innerHTML = ''; // 빈 검색어이므로 기존 결과 지우기
+    statusMessage.textContent = '⚠️ 검색어를 입력해 주세요.';
+    repoList.innerHTML = ''; // 이전 검색 결과 화면에서 지우기
+  } else {
+    // 4. 입력값이 정상적으로 있다면 개발자 도구 콘솔창(F12)에 검색어를 출력합니다.
+    console.log("검색어:", keyword);
+    
+    // (기존에 만들어둔 GitHub API 검색 함수를 실행하여 화면에 결과를 그립니다)
+    searchRepositories(keyword);
   }
 });
 
