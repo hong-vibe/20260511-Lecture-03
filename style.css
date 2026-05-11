@@ -1,28 +1,35 @@
-/* 기본 배경 및 폰트 설정 (다크 모드 기반) */
+/* ==========================================================
+   B안: Cool Light Gray + Dark Navy
+   배경: #EEF2F7 / 카드: #FFFFFF / 텍스트: #1A2332 / 액센트: #2D5A8E
+   ========================================================== */
+
+/* 기본 배경 및 폰트 설정 (라이트 모드) */
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #121212; /* 아주 어두운 회색 (거의 검은색) */
-  color: #e0e0e0; /* 밝은 회색 텍스트로 가독성 확보 */
+  background-color: #EEF2F7; /* 쿨 라이트 그레이 */
+  color: #1A2332;            /* 다크 네이비 텍스트 */
   margin: 0;
   padding: 0;
 }
 
 /* 전체 콘텐츠를 감싸는 영역 */
 .container {
-  max-width: 1000px; /* 데스크톱에서 너무 넓어지지 않게 제한 */
-  margin: 0 auto; /* 가운데 정렬 */
+  max-width: 1000px;
+  margin: 0 auto;
   padding: 40px 20px;
 }
 
-/* 상단 헤더 (제목 및 검색창) */
+/* 상단 헤더 */
 header {
   text-align: center;
   margin-bottom: 40px;
 }
 
 h1 {
-  color: #64b5f6; /* 어두운 배경에 잘 어울리는 밝은 파란색 포인트 */
+  color: #1A2332; /* 다크 네이비 제목 */
   margin-bottom: 20px;
+  font-size: 28px;
+  letter-spacing: -0.5px;
 }
 
 /* 검색창과 버튼을 나란히 배치 */
@@ -38,18 +45,18 @@ h1 {
   max-width: 400px;
   padding: 12px 16px;
   font-size: 16px;
-  background-color: #1e1e1e; /* 입력창 배경도 어둡게 */
-  color: #ffffff; /* 입력하는 글자는 흰색 */
-  border: 1px solid #333333;
-  border-radius: 6px;
+  background-color: #FFFFFF;
+  color: #1A2332;
+  border: 1.5px solid #DCE4ED;
+  border-radius: 8px;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-/* 입력창을 클릭했을 때(포커스) 빛나는 효과 */
+/* 입력창 포커스 효과 */
 #searchInput:focus {
-  border-color: #64b5f6;
-  box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.3);
+  border-color: #2D5A8E;
+  box-shadow: 0 0 0 3px rgba(45, 90, 142, 0.12);
 }
 
 /* 검색 버튼 스타일 */
@@ -57,20 +64,20 @@ h1 {
   padding: 12px 24px;
   font-size: 16px;
   font-weight: bold;
-  color: #121212;
-  background-color: #64b5f6; /* 파란색 포인트 배경 */
+  color: #FFFFFF;
+  background-color: #1A2332; /* 다크 네이비 버튼 */
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.2s, transform 0.1s;
 }
 
 #searchButton:hover {
-  background-color: #42a5f5; /* 마우스를 올렸을 때 조금 더 진해짐 */
+  background-color: #2D3E52;
 }
 
 #searchButton:active {
-  transform: scale(0.96); /* 클릭 시 살짝 작아지는 효과 */
+  transform: scale(0.96);
 }
 
 /* 요소를 완전히 숨기는 유틸리티 클래스 */
@@ -81,136 +88,138 @@ h1 {
 /* 번역 토글 버튼 스타일 */
 .lang-btn {
   background: transparent;
-  color: #81c784; /* 연두색으로 구분 */
-  border: 1px solid #81c784;
+  color: #4A7C59;
+  border: 1.5px solid #4A7C59;
   padding: 10px 16px;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
   font-weight: bold;
-  white-space: nowrap; /* 텍스트가 줄바꿈되지 않게 */
+  white-space: nowrap;
   transition: all 0.2s ease;
 }
 
 .lang-btn:hover {
-  background: rgba(129, 199, 132, 0.15);
+  background: rgba(74, 124, 89, 0.1);
 }
 
 /* 번역이 활성화된 상태 */
 .lang-btn.active {
-  background: #81c784;
-  color: #121212;
+  background: #4A7C59;
+  color: #FFFFFF;
 }
 
-/* 상태 메시지 영역 (검색 중, 결과 없음 등 표시) */
+/* 상태 메시지 영역 */
 .status-message {
-  background-color: #1e1e1e;
-  border: 1px solid #333333;
+  background-color: #F0F4F8;
+  border: 1.5px solid #DCE4ED;
   border-radius: 8px;
   padding: 15px 20px;
   margin-bottom: 30px;
   text-align: center;
   font-size: 16px;
-  color: #90caf9; /* 일반 메시지는 연한 파란색 */
+  color: #4A6A8A;
   font-weight: 500;
   transition: all 0.3s ease;
 }
 
-/* 에러 상태일 때의 스타일 덮어쓰기 */
+/* 에러 상태 */
 .status-message.error {
-  background-color: #2c1414; /* 붉은빛이 도는 어두운 배경 */
-  border-color: #ef5350;
-  color: #ef5350; /* 경고 메시지는 붉은색 */
+  background-color: #FEF2F2;
+  border-color: #E57373;
+  color: #C0392B;
 }
 
 /* 저장소 카드 목록 (그리드 레이아웃) */
 .repo-list {
   display: grid;
-  gap: 20px; /* 카드 사이의 간격 */
-  /* 모바일(기본): 1열 배치 */
-  grid-template-columns: 1fr; 
+  gap: 20px;
+  grid-template-columns: 1fr;
 }
 
-/* 태블릿 크기 이상일 때 (화면 너비 600px 이상) */
+/* 태블릿 크기 이상 */
 @media (min-width: 600px) {
   .repo-list {
-    grid-template-columns: repeat(2, 1fr); /* 2열 배치 */
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-/* 데스크톱 크기 이상일 때 (화면 너비 900px 이상) */
+/* 데스크톱 크기 이상 */
 @media (min-width: 900px) {
   .repo-list {
-    grid-template-columns: repeat(3, 1fr); /* 3열 배치 */
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
 /* 개별 저장소 카드 스타일 */
 .repo-card {
-  background: #1e1e1e; /* 카드 배경을 어둡게 */
-  border: 1px solid #333333;
-  border-radius: 8px;
+  background: #FFFFFF;
+  border: 1.5px solid #E8EEF4;
+  border-radius: 10px;
   padding: 20px;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s, box-shadow 0.2s; /* 부드러운 애니메이션 준비 */
+  box-shadow: 0 2px 8px rgba(26, 35, 50, 0.06);
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
 }
 
-/* 마우스를 올렸을 때 카드가 살짝 떠오르는 효과 */
+/* 카드 호버 효과 */
 .repo-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
-  border-color: #424242;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(26, 35, 50, 0.12);
+  border-color: #B8CCE0;
 }
 
-/* 카드 안의 제목 (저장소 이름) */
+/* 카드 제목 */
 .repo-card h3 {
   margin: 0 0 10px 0;
-  font-size: 18px;
+  font-size: 17px;
+  color: #1A2332;
 }
 
 .repo-card a {
-  color: #64b5f6; /* 링크는 파란색으로 */
+  color: #2D5A8E;
   text-decoration: none;
 }
 
 .repo-card a:hover {
-  text-decoration: underline; /* 링크에 마우스 올리면 밑줄 */
+  text-decoration: underline;
+  color: #1A3E6B;
 }
 
-/* 카드 안의 정보 줄 (언어, 별, 포크 배치) */
+/* 카드 정보 줄 */
 .repo-info {
   display: flex;
-  flex-wrap: wrap; /* 화면이 좁으면 다음 줄로 넘어가게 설정 */
+  flex-wrap: wrap;
   gap: 12px;
   font-size: 13px;
   font-weight: bold;
   margin-bottom: 12px;
 }
 
-/* 언어 표시 스타일 */
+/* 언어 표시 */
 .repo-card .language {
-  color: #81c784; /* 연두색 */
+  color: #3A7D44;
 }
 
-/* 별(Star) 개수 표시 스타일 */
+/* 별점 표시 */
 .repo-card .stars {
-  color: #ffd54f; /* 노란색 */
+  color: #D4884A;
 }
 
-/* 포크(Fork) 개수 표시 스타일 */
+/* 포크 표시 */
 .repo-card .forks {
-  color: #ff8a65; /* 연한 주황색 */
+  color: #B85C38;
 }
 
 /* 저장소 설명 텍스트 */
 .repo-card .description {
   font-size: 14px;
-  color: #b0bec5; /* 너무 밝지 않은 회색으로 본문 표시 */
-  line-height: 1.5;
-  flex-grow: 1; /* 설명이 짧아도 카드의 높이를 맞추기 위해 공간을 채움 */
-  
-  /* [추가] 텍스트가 너무 길면 5줄까지만 보여주고 말줄임표(...) 표시 */
+  color: #5A6A7E;
+  line-height: 1.6;
+  flex-grow: 1;
+
+  /* 5줄 제한 */
   display: -webkit-box;
   -webkit-line-clamp: 5;
   -webkit-box-orient: vertical;
@@ -218,28 +227,29 @@ h1 {
   text-overflow: ellipsis;
 }
 
-/* -------------------------------------------------------------------
+/* ==========================================================
    인기 트렌드 섹션 스타일
-   ------------------------------------------------------------------- */
+   ========================================================== */
 .trending-section {
   margin-top: 60px;
 }
 
 .divider {
   border: 0;
-  height: 1px;
-  background: #333;
+  height: 1.5px;
+  background: #DCE4ED;
   margin-bottom: 40px;
 }
 
 .trending-section h2 {
-  color: #ffd54f; /* 금색 포인트 */
+  color: #1A2332;
   margin-bottom: 8px;
   font-size: 22px;
+  letter-spacing: -0.3px;
 }
 
 .trend-subtitle {
-  color: #888;
+  color: #6B7D90;
   font-size: 13px;
   margin-bottom: 28px;
 }
@@ -247,14 +257,14 @@ h1 {
 .trending-container {
   display: grid;
   gap: 30px;
-  grid-template-columns: 1fr; /* 모바일: 1열 */
-  overflow: hidden; /* 자녀 요소가 바깥으로 나가지 않도록 */
+  grid-template-columns: 1fr;
+  overflow: hidden;
 }
 
 /* 데스크톱: 2열 배치 */
 @media (min-width: 900px) {
   .trending-container {
-    grid-template-columns: 300px 1fr; /* 배지 열을 조금 줄여 그래프 영역 확보 */
+    grid-template-columns: 300px 1fr;
     align-items: start;
   }
 }
@@ -263,65 +273,68 @@ h1 {
 .trending-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
 }
 
 .trend-badge {
-  background: #1e1e1e;
-  border: 1px solid #333;
-  padding: 10px 18px;
-  border-radius: 30px; /* 둥근 배지 스타일 */
-  font-size: 14px;
-  color: #e0e0e0;
-  cursor: default;
+  background: #FFFFFF;
+  border: 1.5px solid #DCE4ED;
+  padding: 9px 16px;
+  border-radius: 30px;
+  font-size: 13px;
+  color: #1A2332;
+  cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
   gap: 8px;
+  box-shadow: 0 1px 4px rgba(26, 35, 50, 0.06);
 }
 
 .trend-badge .rank {
   font-weight: bold;
-  color: #64b5f6;
+  color: #2D5A8E;
   min-width: 28px;
 }
 
 /* 순위 변동 인디케이터 */
 .trend-badge .change {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: bold;
   min-width: 32px;
   text-align: center;
 }
-.trend-badge .change.up   { color: #81c784; } /* 상승: 녹색 */
-.trend-badge .change.down { color: #ef5350; } /* 하락: 빨간색 */
-.trend-badge .change.same { color: #888; }    /* 유지: 회색 */
+.trend-badge .change.up   { color: #3A7D44; } /* 상승: 포레스트 그린 */
+.trend-badge .change.down { color: #C0392B; } /* 하락: 딥 레드 */
+.trend-badge .change.same { color: #8A9BB0; } /* 유지: 뮤트 그레이 */
 
 .trend-badge .keyword {
   font-weight: 500;
 }
 
 .trend-badge:hover {
-  border-color: #64b5f6;
-  background: rgba(100, 181, 246, 0.1);
-  transform: scale(1.05);
+  border-color: #2D5A8E;
+  background: #F0F4FA;
+  transform: scale(1.04);
+  box-shadow: 0 3px 10px rgba(45, 90, 142, 0.12);
 }
 
 /* 그래프 영역 */
 .chart-area {
-  background: #1e1e1e;
-  border: 1px solid #333;
+  background: #FFFFFF;
+  border: 1.5px solid #DCE4ED;
   border-radius: 12px;
-  padding: 20px 16px 20px 16px;
+  padding: 20px 16px;
   min-height: 380px;
   max-height: 420px;
   position: relative;
-  min-width: 0;     /* 그리드 자녀에서 반드시 필요: 넘침 방지 */
-  overflow: hidden; /* 캔버스가 영역을 벗어나도 숨김 */
+  min-width: 0;
+  overflow: hidden;
   box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(26, 35, 50, 0.06);
 }
 
 .loading-text {
-  color: #777;
+  color: #8A9BB0;
   font-style: italic;
 }

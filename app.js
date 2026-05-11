@@ -251,16 +251,16 @@ async function handleSearch() {
  * - React: 2위 → 5위로 하락 (성숙기 진입)
  */
 const TREND_DATA = [
-  { name: 'AI / LLM',    ranks: [8, 6, 4, 2, 1],  color: '#ffd54f' },
-  { name: 'TypeScript',  ranks: [4, 4, 3, 3, 2],  color: '#64b5f6' },
-  { name: 'Rust',        ranks: [9, 8, 7, 5, 3],  color: '#ff8a65' },
-  { name: 'Python',      ranks: [1, 1, 2, 3, 4],  color: '#81c784' },
-  { name: 'React',       ranks: [2, 2, 2, 4, 5],  color: '#4fc3f7' },
-  { name: 'Next.js',     ranks: [3, 3, 4, 4, 6],  color: '#ce93d8' },
-  { name: 'Go (Golang)', ranks: [5, 5, 6, 6, 7],  color: '#80cbc4' },
-  { name: 'Kubernetes',  ranks: [6, 7, 8, 8, 8],  color: '#f48fb1' },
-  { name: 'Vue.js',      ranks: [7, 9, 9, 9, 9],  color: '#a5d6a7' },
-  { name: 'Flutter',     ranks: [10, 10, 10, 10, 10], color: '#90caf9' },
+  { name: 'AI / LLM',    ranks: [8, 6, 4, 2, 1],  color: '#2D5A8E' }, // 딥 블루
+  { name: 'TypeScript',  ranks: [4, 4, 3, 3, 2],  color: '#1A6B8A' }, // 오션
+  { name: 'Rust',        ranks: [9, 8, 7, 5, 3],  color: '#B85C38' }, // 러스트 테라코타
+  { name: 'Python',      ranks: [1, 1, 2, 3, 4],  color: '#3A7D44' }, // 포레스트 그린
+  { name: 'React',       ranks: [2, 2, 2, 4, 5],  color: '#6B4FA0' }, // 뮤트 퍼플
+  { name: 'Next.js',     ranks: [3, 3, 4, 4, 6],  color: '#B8860B' }, // 다크 골드
+  { name: 'Go (Golang)', ranks: [5, 5, 6, 6, 7],  color: '#2E8B8B' }, // 틸
+  { name: 'Kubernetes',  ranks: [6, 7, 8, 8, 8],  color: '#B24D7A' }, // 뮤트 핑크
+  { name: 'Vue.js',      ranks: [7, 9, 9, 9, 9],  color: '#4A7C59' }, // 세이지 그린
+  { name: 'Flutter',     ranks: [10, 10, 10, 10, 10], color: '#4A6FA0' }, // 스틸 블루
 ];
 
 // X축 레이블 (5개 시점)
@@ -362,15 +362,15 @@ function renderBumpChart(data) {
       responsive: true,
       maintainAspectRatio: false,
       layout: {
-        padding: { right: 80 } // 끝 레이블 공간 확보
+        padding: { right: 80 }
       },
       plugins: {
-        legend: { display: false }, // 범례 숨김 (끝 레이블로 대체)
+        legend: { display: false },
         tooltip: {
-          backgroundColor: '#1e1e1e',
-          titleColor: '#ffd54f',
-          bodyColor: '#fff',
-          borderColor: '#444',
+          backgroundColor: '#FFFFFF',
+          titleColor: '#1A2332',
+          bodyColor: '#4A6A8A',
+          borderColor: '#DCE4ED',
           borderWidth: 1,
           callbacks: {
             label: ctx => {
@@ -383,16 +383,16 @@ function renderBumpChart(data) {
       },
       scales: {
         x: {
-          grid: { color: '#2a2a2a' },
-          ticks: { color: '#aaa', font: { size: 11 } }
+          grid: { color: '#EEF2F7' },
+          ticks: { color: '#5A6A7E', font: { size: 11 } }
         },
         y: {
-          reverse: true,  // 1위가 맨 위
+          reverse: true,
           min: 1,
           max: 10,
-          grid: { color: '#2a2a2a' },
+          grid: { color: '#EEF2F7' },
           ticks: {
-            color: '#aaa',
+            color: '#5A6A7E',
             stepSize: 1,
             callback: val => `${val}위`
           }
