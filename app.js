@@ -382,11 +382,17 @@ function renderBumpChart(data) {
       layout: {
         padding: { left: 90, right: 120 } // 좌우 레이블 표시 공간 확보
       },
+      // 차트의 텍스트 레이블이나 선 근처를 클릭/호버해도 잘 인식되도록 상호작용 설정
+      interaction: {
+        mode: 'nearest',
+        axis: 'y',
+        intersect: false
+      },
       // 마우스 오버 시 커서 변경
       onHover: (e, elements) => {
         e.native.target.style.cursor = elements.length ? 'pointer' : 'default';
       },
-      // 차트의 점이나 선 클릭 시 검색 실행
+      // 차트 영역 아무 곳이나(레이블 포함) 클릭 시 검색 실행
       onClick: (e, elements, chart) => {
         if (elements.length > 0) {
           const datasetIndex = elements[0].datasetIndex;
