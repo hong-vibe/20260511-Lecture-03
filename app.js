@@ -516,7 +516,6 @@ function renderBumpChart(data) {
   canvas.addEventListener('mousemove', canvas._hoverEventFn);
   canvas.addEventListener('click', canvas._clickEventFn);
   canvas._hasHoverEvent = true;
-  });
 }
 
 // -------------------------------------------------------------------
