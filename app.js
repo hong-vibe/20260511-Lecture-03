@@ -7,43 +7,64 @@ const statusMessage = document.getElementById('statusMessage');
 const repoList = document.getElementById('repoList');
 
 /**
- * GitHub API를 호출하여 저장소를 검색하는 함수입니다.
+ * GitHub API를 호출하여 저장소 데이터를 가져오는 비동기 함수입니다. (fetchRepos)
+ * 데이터를 가져오는 로직만 담당합니다.
+ * @param {string} keyword - 검색할 키워드
+ * @returns {Promise<Object>} - GitHub에서 받아온 JSON 데이터
+ */
+async function fetchRepos(keyword) {
+  // 1. 검색어를 URL에 안전하게 포함시키기 위해 인코딩(처리)합니다.
+  const encodedKeyword = encodeURIComponent(keyword);
+  
+  // 2. 검색을 위한 API 주소를 만듭니다. (별점 기준 내림차순, 6개 결과)
+  const url = `https://api.github.com/search/repositories?q=${encodedKeyword}&sort=stars&order=desc&per_page=6`;
+
+  // 3. fetch를 사용하여 네트워크 요청을 보내고 응답이 올 때까지 기다립니다(await).
+  const response = await fetch(url);
+
+  // 4. 서버 응답이 성공(OK)인지 확인합니다. (성공이 아니면 에러를 발생시킵니다)
+  if (!response.ok) {
+    throw new Error(`GitHub API 요청에 실패했습니다. (상태 코드: ${response.status})`);
+  }
+
+  // 5. 받아온 응답 데이터를 JSON 형식으로 변환하여 반환합니다.
+  return await response.json();
+}
+
+/**
+ * 사용자 화면에 검색 진행 상태를 보여주고 결과를 처리하는 함수입니다.
  * @param {string} keyword - 검색할 키워드
  */
-function searchRepositories(keyword) {
-  // 검색 시작 시 상태 메시지 업데이트
+async function searchRepositories(keyword) {
+  // 검색 시작 시 화면 상태 메시지를 업데이트하고 이전 결과를 지웁니다.
   statusMessage.className = 'status-message';
   statusMessage.textContent = '⏳ 검색 중... 데이터를 불러오고 있습니다.';
-  repoList.innerHTML = ''; // 이전 검색 결과 초기화
+  repoList.innerHTML = ''; 
 
-  const url = `https://api.github.com/search/repositories?q=${encodeURIComponent(keyword)}&sort=stars&order=desc&per_page=6`;
+  try {
+    // 1. fetchRepos 함수를 호출하여 실제 데이터를 비동기적으로 가져옵니다.
+    const data = await fetchRepos(keyword);
 
-  fetch(url)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then(data => {
-      if (data.items.length === 0) {
-        statusMessage.className = 'status-message';
-        statusMessage.textContent = `🤔 '${keyword}'에 대한 검색 결과가 없습니다.`;
-        return;
-      }
-      
-      // 검색 완료 시 상태 업데이트
+    // 2. 검색 결과가 하나도 없는 경우를 처리합니다.
+    if (data.items.length === 0) {
       statusMessage.className = 'status-message';
-      statusMessage.textContent = `✅ '${keyword}'에 대한 검색을 완료했습니다. (${data.items.length}개 표시)`;
-      
-      // 검색된 데이터를 바탕으로 화면에 카드 렌더링
-      renderCards(data.items);
-    })
-    .catch(error => {
-      console.error('검색 중 에러 발생:', error);
-      statusMessage.className = 'status-message error';
-      statusMessage.textContent = '🚨 데이터를 불러오는 데 실패했습니다.';
-    });
+      statusMessage.textContent = `🤔 '${keyword}'에 대한 검색 결과가 없습니다.`;
+      return;
+    }
+    
+    // 3. 검색 성공 시 상태를 업데이트합니다.
+    statusMessage.className = 'status-message';
+    statusMessage.textContent = `✅ '${keyword}'에 대한 검색을 완료했습니다. (${data.items.length}개 표시)`;
+    
+    // 4. 받아온 데이터(data.items)를 화면에 카드 형태로 그리는 함수를 호출합니다.
+    renderCards(data.items);
+
+  } catch (error) {
+    // 에러가 발생한 경우(네트워크 문제 등) 콘솔에 기록하고 사용자에게 알립니다.
+    console.error('검색 중 에러 발생:', error);
+    statusMessage.className = 'status-message error';
+    statusMessage.textContent = '🚨 데이터를 불러오는 데 실패했습니다.';
+  }
 }
 
 /**
