@@ -236,111 +236,139 @@ async function handleSearch() {
 }
 
 // -------------------------------------------------------------------
-// 이벤트 연결 (Event Listeners)
-// -------------------------------------------------------------------
-// 인기 트렌드 기능 관련 함수
+// 인기 트렌드 기능: Bump Chart (순위 변동 차트)
 // -------------------------------------------------------------------
 
 /**
- * 지난 7일간 생성된 인기 저장소를 가져와 트렌드 영역에 표시합니다.
+ * 인사이트 있는 개발 키워드 순위 변동 데이터입니다.
+ * prevRank: 1주 전 순위, currRank: 현재 순위
+ *
+ * [인사이트 스토리]
+ * - AI/LLM이 5위 → 1위로 폭발적 상승 (AI 붐 반영)
+ * - TypeScript가 3위 → 2위로 꾸준한 상승 (타입 안전성 트렌드)
+ * - Rust가 7위 → 3위로 급상승 (시스템 프로그래밍 관심 증가)
+ * - Python이 1위 → 4위로 하락 (AI에 자리를 내줌, 여전히 강세)
+ * - React가 2위 → 5위로 하락 (성숙기 진입, 안정세)
  */
-async function fetchTrendingRepos() {
+const TREND_DATA = [
+  { name: 'AI / LLM',    prevRank: 5,  currRank: 1,  color: '#ffd54f' },
+  { name: 'TypeScript',  prevRank: 3,  currRank: 2,  color: '#64b5f6' },
+  { name: 'Rust',        prevRank: 7,  currRank: 3,  color: '#ff8a65' },
+  { name: 'Python',      prevRank: 1,  currRank: 4,  color: '#81c784' },
+  { name: 'React',       prevRank: 2,  currRank: 5,  color: '#4fc3f7' },
+  { name: 'Next.js',     prevRank: 4,  currRank: 6,  color: '#ce93d8' },
+  { name: 'Go (Golang)', prevRank: 6,  currRank: 7,  color: '#80cbc4' },
+  { name: 'Kubernetes',  prevRank: 8,  currRank: 8,  color: '#f48fb1' },
+  { name: 'Vue.js',      prevRank: 9,  currRank: 9,  color: '#a5d6a7' },
+  { name: 'Flutter',     prevRank: 10, currRank: 10, color: '#90caf9' },
+];
+
+/**
+ * 트렌드 배지 리스트와 Bump Chart를 화면에 렌더링합니다.
+ */
+function renderTrending() {
   const trendingList = document.getElementById('trendingList');
-  const today = new Date();
-  // 7일 전 날짜 계산
-  const lastWeekDate = new Date();
-  lastWeekDate.setDate(today.getDate() - 7);
-  const lastWeek = lastWeekDate.toISOString().split('T')[0];
-  
-  // 최근 일주일간 생성된 저장소 중 별점 순 상위 10개 호출
-  const url = `https://api.github.com/search/repositories?q=created:>${lastWeek}&sort=stars&order=desc&per_page=10`;
-  
-  try {
-    const res = await fetch(url);
-    const data = await res.json();
-    const items = data.items;
+  trendingList.innerHTML = '';
 
-    // 리스트 초기화
-    trendingList.innerHTML = '';
-    
-    const labels = [];
-    const starCounts = [];
+  const sorted = [...TREND_DATA].sort((a, b) => a.currRank - b.currRank);
 
-    items.forEach((repo, index) => {
-      // 1. 배지 UI 생성
-      const badge = document.createElement('div');
-      badge.className = 'trend-badge';
-      badge.title = `${repo.description || '설명 없음'}`;
-      badge.innerHTML = `<span class="rank">${index + 1}</span> ${repo.name}`;
-      
-      // 배지 클릭 시 해당 저장소 검색창에 입력하고 검색 실행 (편의 기능)
-      badge.style.cursor = 'pointer';
-      badge.onclick = () => {
-        searchInput.value = repo.name;
-        handleSearch();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      };
-      
-      trendingList.appendChild(badge);
+  sorted.forEach(item => {
+    const diff = item.prevRank - item.currRank;
 
-      // 2. 그래프용 데이터 수집
-      labels.push(repo.name);
-      starCounts.push(repo.stargazers_count);
-    });
+    let changeHTML = '';
+    if (diff > 0) {
+      changeHTML = `<span class="change up">▲ ${diff}</span>`;
+    } else if (diff < 0) {
+      changeHTML = `<span class="change down">▼ ${Math.abs(diff)}</span>`;
+    } else {
+      changeHTML = `<span class="change same">── </span>`;
+    }
 
-    // 3. 그래프 렌더링
-    renderTrendingChart(labels, starCounts);
+    const badge = document.createElement('div');
+    badge.className = 'trend-badge';
+    badge.style.borderColor = item.color + '66';
+    badge.title = `지난주 ${item.prevRank}위 → 현재 ${item.currRank}위`;
+    badge.innerHTML = `
+      <span class="rank">${item.currRank}위</span>
+      <span class="keyword">${item.name}</span>
+      ${changeHTML}
+    `;
+    badge.style.cursor = 'pointer';
+    badge.onclick = () => {
+      searchInput.value = item.name.split('/')[0].trim();
+      handleSearch();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    trendingList.appendChild(badge);
+  });
 
-  } catch (error) {
-    console.error('트렌드 데이터 로드 실패:', error);
-    trendingList.innerHTML = '<p class="loading-text">트렌드 데이터를 불러오지 못했습니다.</p>';
-  }
+  renderBumpChart(sorted);
 }
 
 /**
- * Chart.js를 사용하여 인기 저장소 별점 순위를 그래프로 그립니다.
+ * Chart.js를 사용하여 Bump Chart(순위 변동 라인 차트)를 그립니다.
+ * X축: '1주 전', '현재' / Y축: 1위(상단) ~ 10위(하단) 역순
  */
-function renderTrendingChart(labels, data) {
-  const ctx = document.getElementById('trendingChart').getContext('2d');
-  
+function renderBumpChart(data) {
+  const ctx = document.getElementById('rankChart').getContext('2d');
+
   new Chart(ctx, {
-    type: 'bar',
+    type: 'line',
     data: {
-      labels: labels,
-      datasets: [{
-        label: '가져온 별점(Stars) 수',
-        data: data,
-        backgroundColor: 'rgba(100, 181, 246, 0.5)',
-        borderColor: '#64b5f6',
-        borderWidth: 1,
-        borderRadius: 4
-      }]
+      labels: ['1주 전', '현재'],
+      datasets: data.map(item => ({
+        label: item.name,
+        data: [item.prevRank, item.currRank],
+        borderColor: item.color,
+        backgroundColor: item.color + '33',
+        borderWidth: item.currRank <= 3 ? 3 : 1.5,
+        pointRadius: 6,
+        pointHoverRadius: 9,
+        pointBackgroundColor: item.color,
+        tension: 0.2,
+      }))
     },
     options: {
-      indexAxis: 'y', // 가로 막대 그래프
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { display: false },
+        legend: {
+          position: 'right',
+          labels: {
+            color: '#ccc',
+            font: { size: 11 },
+            boxWidth: 14,
+            padding: 10,
+          }
+        },
         tooltip: {
           backgroundColor: '#1e1e1e',
-          titleColor: '#64b5f6',
+          titleColor: '#ffd54f',
           bodyColor: '#fff',
           borderColor: '#444',
           borderWidth: 1,
-          displayColors: false
+          callbacks: {
+            label: ctx => {
+              const item = data[ctx.datasetIndex];
+              return ` ${ctx.dataset.label}: ${ctx.raw}위 (지난주 ${item.prevRank}위 → 현재 ${item.currRank}위)`;
+            }
+          }
         }
       },
       scales: {
         x: {
-          grid: { color: '#333' },
-          ticks: { color: '#888' }
+          grid: { color: '#2a2a2a' },
+          ticks: { color: '#aaa', font: { size: 13, weight: 'bold' } }
         },
         y: {
-          grid: { display: false },
-          ticks: { 
-            color: '#fff',
-            font: { size: 11, weight: 'bold' }
+          reverse: true,
+          min: 1,
+          max: 10,
+          grid: { color: '#2a2a2a' },
+          ticks: {
+            color: '#aaa',
+            stepSize: 1,
+            callback: val => `${val}위`
           }
         }
       }
@@ -348,6 +376,8 @@ function renderTrendingChart(labels, data) {
   });
 }
 
+// -------------------------------------------------------------------
+// 이벤트 연결 (Event Listeners)
 // -------------------------------------------------------------------
 
 // 검색 버튼 클릭 시 검색 함수(handleSearch) 실행
@@ -371,6 +401,6 @@ if (isTranslationSupported()) {
   translateBtn.classList.remove('hidden');
 }
 
-// 페이지 로드 시 인기 트렌드 데이터를 불러옵니다.
-fetchTrendingRepos();
+// 페이지 로드 시 Bump Chart 트렌드를 렌더링합니다.
+renderTrending();
 

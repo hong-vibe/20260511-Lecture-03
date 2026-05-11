@@ -234,8 +234,14 @@ h1 {
 
 .trending-section h2 {
   color: #ffd54f; /* 금색 포인트 */
-  margin-bottom: 30px;
+  margin-bottom: 8px;
   font-size: 22px;
+}
+
+.trend-subtitle {
+  color: #888;
+  font-size: 13px;
+  margin-bottom: 28px;
 }
 
 .trending-container {
@@ -276,6 +282,22 @@ h1 {
 .trend-badge .rank {
   font-weight: bold;
   color: #64b5f6;
+  min-width: 28px;
+}
+
+/* 순위 변동 인디케이터 */
+.trend-badge .change {
+  font-size: 12px;
+  font-weight: bold;
+  min-width: 32px;
+  text-align: center;
+}
+.trend-badge .change.up   { color: #81c784; } /* 상승: 녹색 */
+.trend-badge .change.down { color: #ef5350; } /* 하락: 빨간색 */
+.trend-badge .change.same { color: #888; }    /* 유지: 회색 */
+
+.trend-badge .keyword {
+  font-weight: 500;
 }
 
 .trend-badge:hover {
@@ -289,8 +311,9 @@ h1 {
   background: #1e1e1e;
   border: 1px solid #333;
   border-radius: 12px;
-  padding: 20px;
-  min-height: 350px;
+  padding: 24px;
+  min-height: 420px;
+  position: relative;
 }
 
 .loading-text {
