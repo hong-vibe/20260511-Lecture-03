@@ -204,6 +204,11 @@ async function handleSearch() {
   statusMessage.className = 'status-message';
   statusMessage.textContent = '⏳ 검색 중입니다...';
 
+  // [추가] 새로운 검색을 시작하므로 번역 상태를 초기화합니다.
+  isTranslated = false;
+  translateBtn.textContent = '🌐 번역';
+  translateBtn.classList.remove('active');
+
   // [조건 4] try/catch/finally 구조를 사용하여 에러를 처리하고 마무리를 보장합니다.
   try {
     // 4. fetchRepos 함수를 호출하여 데이터를 비동기적으로 가져옵니다.
