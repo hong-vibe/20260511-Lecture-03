@@ -382,20 +382,58 @@ function renderBumpChart(data) {
       layout: {
         padding: { left: 90, right: 120 } // 좌우 레이블 표시 공간 확보
       },
-      // 차트의 텍스트 레이블이나 선 근처를 클릭/호버해도 잘 인식되도록 상호작용 설정
+      // 툴팁 중복 표시 방지 및 정확한 점 인식을 위해 xy축 기준 가장 가까운 요소 하나만 찾음
       interaction: {
         mode: 'nearest',
-        axis: 'y',
+        axis: 'xy',
         intersect: false
       },
-      // 마우스 오버 시 커서 변경
-      onHover: (e, elements) => {
-        e.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+      // 마우스 오버 시 커서 변경 (레이블 영역 포함)
+      onHover: (e, elements, chart) => {
+        let isPointer = elements.length > 0;
+        
+        // 차트 영역 밖(좌우 레이블 패딩)에 마우스가 있을 때 직접 계산
+        if (!isPointer && chart) {
+          chart.data.datasets.forEach((dataset, i) => {
+            const meta = chart.getDatasetMeta(i);
+            if (!meta.hidden && meta.data.length > 0) {
+              const point = e.x < chart.width / 2 ? meta.data[0] : meta.data[meta.data.length - 1];
+              const distY = Math.abs(e.y - point.y);
+              const distX = Math.abs(e.x - point.x);
+              // 좌우 150px, 위아래 15px 이내면 호버 인정
+              if (distY < 15 && distX < 150) {
+                isPointer = true;
+              }
+            }
+          });
+        }
+        e.native.target.style.cursor = isPointer ? 'pointer' : 'default';
       },
-      // 차트 영역 아무 곳이나(레이블 포함) 클릭 시 검색 실행
+      // 차트 영역이나 레이블 클릭 시 검색 실행
       onClick: (e, elements, chart) => {
+        let datasetIndex = -1;
+
         if (elements.length > 0) {
-          const datasetIndex = elements[0].datasetIndex;
+          datasetIndex = elements[0].datasetIndex;
+        } else if (chart) {
+          // 패딩 영역(텍스트 레이블) 클릭 시: Y좌표가 가장 가까운 선 찾기
+          let minDistance = Infinity;
+          chart.data.datasets.forEach((dataset, i) => {
+            const meta = chart.getDatasetMeta(i);
+            if (!meta.hidden && meta.data.length > 0) {
+              const point = e.x < chart.width / 2 ? meta.data[0] : meta.data[meta.data.length - 1];
+              const distY = Math.abs(e.y - point.y);
+              const distX = Math.abs(e.x - point.x);
+              
+              if (distY < 20 && distX < 150 && distY < minDistance) {
+                minDistance = distY;
+                datasetIndex = i;
+              }
+            }
+          });
+        }
+
+        if (datasetIndex !== -1) {
           const keyword = chart.data.datasets[datasetIndex].label;
           searchInput.value = keyword.split('/')[0].trim(); // "AI / LLM" -> "AI"
           handleSearch();
