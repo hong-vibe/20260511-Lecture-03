@@ -2,9 +2,7 @@
 
 // HTML 요소들을 쉽게 제어하기 위해 변수에 할당합니다.
 const searchInput = document.getElementById('searchInput');
-const searchBtn = document.getElementById('searchBtn');
-const statusSection = document.getElementById('statusSection');
-const statusIcon = document.getElementById('statusIcon');
+const searchBtn = document.getElementById('searchButton');
 const statusMessage = document.getElementById('statusMessage');
 const repoList = document.getElementById('repoList');
 
@@ -14,9 +12,8 @@ const repoList = document.getElementById('repoList');
  */
 function searchRepositories(keyword) {
   // 검색 시작 시 상태 메시지 업데이트
-  statusSection.className = 'status-section';
-  statusIcon.textContent = '⏳';
-  statusMessage.textContent = '검색 중... 데이터를 불러오고 있습니다.';
+  statusMessage.className = 'status-message';
+  statusMessage.textContent = '⏳ 검색 중... 데이터를 불러오고 있습니다.';
   repoList.innerHTML = ''; // 이전 검색 결과 초기화
 
   const url = `https://api.github.com/search/repositories?q=${encodeURIComponent(keyword)}&sort=stars&order=desc&per_page=6`;
@@ -30,25 +27,22 @@ function searchRepositories(keyword) {
     })
     .then(data => {
       if (data.items.length === 0) {
-        statusSection.className = 'status-section';
-        statusIcon.textContent = '🤔';
-        statusMessage.textContent = `'${keyword}'에 대한 검색 결과가 없습니다.`;
+        statusMessage.className = 'status-message';
+        statusMessage.textContent = `🤔 '${keyword}'에 대한 검색 결과가 없습니다.`;
         return;
       }
       
       // 검색 완료 시 상태 업데이트
-      statusSection.className = 'status-section';
-      statusIcon.textContent = '✅';
-      statusMessage.textContent = `'${keyword}'에 대한 검색을 완료했습니다. (${data.items.length}개 표시)`;
+      statusMessage.className = 'status-message';
+      statusMessage.textContent = `✅ '${keyword}'에 대한 검색을 완료했습니다. (${data.items.length}개 표시)`;
       
       // 검색된 데이터를 바탕으로 화면에 카드 렌더링
       renderCards(data.items);
     })
     .catch(error => {
       console.error('검색 중 에러 발생:', error);
-      statusSection.className = 'status-section error';
-      statusIcon.textContent = '🚨';
-      statusMessage.textContent = '데이터를 불러오는 데 실패했습니다.';
+      statusMessage.className = 'status-message error';
+      statusMessage.textContent = '🚨 데이터를 불러오는 데 실패했습니다.';
     });
 }
 
@@ -77,10 +71,9 @@ searchBtn.addEventListener('click', () => {
   if (keyword) {
     searchRepositories(keyword);
   } else {
-    // 팝업(alert) 대신 상태 섹션을 경고 모드로 변경하여 화면에 표시
-    statusSection.className = 'status-section error';
-    statusIcon.textContent = '⚠️';
-    statusMessage.textContent = '검색어를 입력해주세요.';
+    // 상태 메시지를 경고 모드로 변경하여 화면에 표시
+    statusMessage.className = 'status-message error';
+    statusMessage.textContent = '⚠️ 검색어를 입력해주세요.';
     repoList.innerHTML = ''; // 빈 검색어이므로 기존 결과 지우기
   }
 });

@@ -61,38 +61,24 @@ h1 {
   background-color: #2c974b;
 }
 
-/* 상태 섹션 스타일 */
-.status-section {
+/* 상태 메시지 영역 스타일 */
+.status-message {
   background-color: #ddf4ff;
   border: 1px solid #54aeff;
   border-radius: 8px;
   padding: 15px 20px;
   margin-bottom: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  transition: all 0.3s ease;
-}
-
-.status-icon {
-  font-size: 20px;
-}
-
-.status-message {
+  text-align: center;
   font-size: 16px;
   color: #0969da;
   font-weight: 500;
-  margin: 0;
+  transition: all 0.3s ease;
 }
 
 /* 에러 상태 스타일 */
-.status-section.error {
+.status-message.error {
   background-color: #ffebe9;
   border-color: #ff8182;
-}
-
-.status-section.error .status-message {
   color: #cf222e;
 }
 
