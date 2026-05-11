@@ -77,7 +77,11 @@ searchBtn.addEventListener('click', () => {
   if (keyword) {
     searchRepositories(keyword);
   } else {
-    alert('검색어를 입력해주세요.');
+    // 팝업(alert) 대신 상태 섹션을 경고 모드로 변경하여 화면에 표시
+    statusSection.className = 'status-section error';
+    statusIcon.textContent = '⚠️';
+    statusMessage.textContent = '검색어를 입력해주세요.';
+    repoList.innerHTML = ''; // 빈 검색어이므로 기존 결과 지우기
   }
 });
 
