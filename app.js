@@ -238,6 +238,117 @@ async function handleSearch() {
 // -------------------------------------------------------------------
 // 이벤트 연결 (Event Listeners)
 // -------------------------------------------------------------------
+// 인기 트렌드 기능 관련 함수
+// -------------------------------------------------------------------
+
+/**
+ * 지난 7일간 생성된 인기 저장소를 가져와 트렌드 영역에 표시합니다.
+ */
+async function fetchTrendingRepos() {
+  const trendingList = document.getElementById('trendingList');
+  const today = new Date();
+  // 7일 전 날짜 계산
+  const lastWeekDate = new Date();
+  lastWeekDate.setDate(today.getDate() - 7);
+  const lastWeek = lastWeekDate.toISOString().split('T')[0];
+  
+  // 최근 일주일간 생성된 저장소 중 별점 순 상위 10개 호출
+  const url = `https://api.github.com/search/repositories?q=created:>${lastWeek}&sort=stars&order=desc&per_page=10`;
+  
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    const items = data.items;
+
+    // 리스트 초기화
+    trendingList.innerHTML = '';
+    
+    const labels = [];
+    const starCounts = [];
+
+    items.forEach((repo, index) => {
+      // 1. 배지 UI 생성
+      const badge = document.createElement('div');
+      badge.className = 'trend-badge';
+      badge.title = `${repo.description || '설명 없음'}`;
+      badge.innerHTML = `<span class="rank">${index + 1}</span> ${repo.name}`;
+      
+      // 배지 클릭 시 해당 저장소 검색창에 입력하고 검색 실행 (편의 기능)
+      badge.style.cursor = 'pointer';
+      badge.onclick = () => {
+        searchInput.value = repo.name;
+        handleSearch();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+      
+      trendingList.appendChild(badge);
+
+      // 2. 그래프용 데이터 수집
+      labels.push(repo.name);
+      starCounts.push(repo.stargazers_count);
+    });
+
+    // 3. 그래프 렌더링
+    renderTrendingChart(labels, starCounts);
+
+  } catch (error) {
+    console.error('트렌드 데이터 로드 실패:', error);
+    trendingList.innerHTML = '<p class="loading-text">트렌드 데이터를 불러오지 못했습니다.</p>';
+  }
+}
+
+/**
+ * Chart.js를 사용하여 인기 저장소 별점 순위를 그래프로 그립니다.
+ */
+function renderTrendingChart(labels, data) {
+  const ctx = document.getElementById('trendingChart').getContext('2d');
+  
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: '가져온 별점(Stars) 수',
+        data: data,
+        backgroundColor: 'rgba(100, 181, 246, 0.5)',
+        borderColor: '#64b5f6',
+        borderWidth: 1,
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis: 'y', // 가로 막대 그래프
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1e1e1e',
+          titleColor: '#64b5f6',
+          bodyColor: '#fff',
+          borderColor: '#444',
+          borderWidth: 1,
+          displayColors: false
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: '#333' },
+          ticks: { color: '#888' }
+        },
+        y: {
+          grid: { display: false },
+          ticks: { 
+            color: '#fff',
+            font: { size: 11, weight: 'bold' }
+          }
+        }
+      }
+    }
+  });
+}
+
+// -------------------------------------------------------------------
 
 // 검색 버튼 클릭 시 검색 함수(handleSearch) 실행
 searchBtn.addEventListener('click', handleSearch);
@@ -259,4 +370,7 @@ translateBtn.addEventListener('click', toggleTranslation);
 if (isTranslationSupported()) {
   translateBtn.classList.remove('hidden');
 }
+
+// 페이지 로드 시 인기 트렌드 데이터를 불러옵니다.
+fetchTrendingRepos();
 
