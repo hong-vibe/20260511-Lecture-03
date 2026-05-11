@@ -288,10 +288,10 @@ const startLabelPlugin = {
         const firstPoint = meta.data[0];
         ctx.save();
         ctx.fillStyle = dataset.borderColor;
-        ctx.font = 'bold 11px "Segoe UI", sans-serif';
+        ctx.font = 'bold 13px "Segoe UI", sans-serif'; // 폰트 크기 13px로 확대
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
-        ctx.fillText(dataset.label, firstPoint.x - 8, firstPoint.y);
+        ctx.fillText(dataset.label, firstPoint.x - 10, firstPoint.y);
         ctx.restore();
       }
     });
@@ -333,15 +333,15 @@ const endLabelPlugin = {
         ctx.textAlign = 'left';
         
         // 1. 순위 및 이름 쓰기 (선 색상)
-        ctx.font = 'bold 11px "Segoe UI", sans-serif';
+        ctx.font = 'bold 13px "Segoe UI", sans-serif'; // 폰트 크기 13px로 확대
         ctx.fillStyle = dataset.borderColor;
         const mainText = `${currRank}위 ${dataset.label}`;
-        ctx.fillText(mainText, lastPoint.x + 8, lastPoint.y);
+        ctx.fillText(mainText, lastPoint.x + 10, lastPoint.y);
         
         // 2. 변동 쓰기 (상태에 따른 색상)
         const mainTextWidth = ctx.measureText(mainText + ' ').width;
         ctx.fillStyle = diffColor;
-        ctx.fillText(diffStr, lastPoint.x + 8 + mainTextWidth, lastPoint.y);
+        ctx.fillText(diffStr, lastPoint.x + 10 + mainTextWidth, lastPoint.y);
         
         ctx.restore();
       }
@@ -357,9 +357,14 @@ const endLabelPlugin = {
 function renderBumpChart(data) {
   const ctx = document.getElementById('rankChart').getContext('2d');
 
-  new Chart(ctx, {
+  // 기존 차트가 있으면 삭제
+  if (window.rankChartInstance) {
+    window.rankChartInstance.destroy();
+  }
+
+  window.rankChartInstance = new Chart(ctx, {
     type: 'line',
-    plugins: [startLabelPlugin, endLabelPlugin], // 왼쪽, 오른쪽 레이블 플러그인
+    plugins: [startLabelPlugin, endLabelPlugin],
     data: {
       labels: TREND_LABELS,
       datasets: data.map(item => ({
@@ -372,7 +377,6 @@ function renderBumpChart(data) {
         pointHoverRadius: 6,
         pointBackgroundColor: item.color,
         tension: 0.3,
-        // 차트 선에 마우스 오버 시 포인터 변경용 확장 반경
         hitRadius: 10,
       }))
     },
@@ -380,65 +384,13 @@ function renderBumpChart(data) {
       responsive: true,
       maintainAspectRatio: false,
       layout: {
-        padding: { left: 90, right: 120 } // 좌우 레이블 표시 공간 확보
+        padding: { left: 110, right: 150 } // 폰트 크기가 커졌으므로 패딩도 확대
       },
-      // 툴팁 중복 표시 방지 및 정확한 점 인식을 위해 xy축 기준 가장 가까운 요소 하나만 찾음
+      // 툴팁 중복 방지를 위한 기본 세팅 (텍스트 영역 이벤트는 네이티브로 분리)
       interaction: {
         mode: 'nearest',
         axis: 'xy',
         intersect: false
-      },
-      // 마우스 오버 시 커서 변경 (레이블 영역 포함)
-      onHover: (e, elements, chart) => {
-        let isPointer = elements.length > 0;
-        
-        // 차트 영역 밖(좌우 레이블 패딩)에 마우스가 있을 때 직접 계산
-        if (!isPointer && chart) {
-          chart.data.datasets.forEach((dataset, i) => {
-            const meta = chart.getDatasetMeta(i);
-            if (!meta.hidden && meta.data.length > 0) {
-              const point = e.x < chart.width / 2 ? meta.data[0] : meta.data[meta.data.length - 1];
-              const distY = Math.abs(e.y - point.y);
-              const distX = Math.abs(e.x - point.x);
-              // 좌우 150px, 위아래 15px 이내면 호버 인정
-              if (distY < 15 && distX < 150) {
-                isPointer = true;
-              }
-            }
-          });
-        }
-        e.native.target.style.cursor = isPointer ? 'pointer' : 'default';
-      },
-      // 차트 영역이나 레이블 클릭 시 검색 실행
-      onClick: (e, elements, chart) => {
-        let datasetIndex = -1;
-
-        if (elements.length > 0) {
-          datasetIndex = elements[0].datasetIndex;
-        } else if (chart) {
-          // 패딩 영역(텍스트 레이블) 클릭 시: Y좌표가 가장 가까운 선 찾기
-          let minDistance = Infinity;
-          chart.data.datasets.forEach((dataset, i) => {
-            const meta = chart.getDatasetMeta(i);
-            if (!meta.hidden && meta.data.length > 0) {
-              const point = e.x < chart.width / 2 ? meta.data[0] : meta.data[meta.data.length - 1];
-              const distY = Math.abs(e.y - point.y);
-              const distX = Math.abs(e.x - point.x);
-              
-              if (distY < 20 && distX < 150 && distY < minDistance) {
-                minDistance = distY;
-                datasetIndex = i;
-              }
-            }
-          });
-        }
-
-        if (datasetIndex !== -1) {
-          const keyword = chart.data.datasets[datasetIndex].label;
-          searchInput.value = keyword.split('/')[0].trim(); // "AI / LLM" -> "AI"
-          handleSearch();
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
       },
       plugins: {
         legend: { display: false },
@@ -467,10 +419,103 @@ function renderBumpChart(data) {
           min: 1,
           max: 10,
           grid: { color: '#EEF2F7' },
-          ticks: { display: false } // y축 숫자(1위~10위) 숨김
+          ticks: { display: false }
         }
       }
     }
+  });
+
+  // 점 클릭 방지 & 텍스트 영역만 클릭되도록 네이티브 이벤트 리스너 추가
+  const canvas = ctx.canvas;
+
+  // 이벤트 리스너 중복 추가 방지를 위해 기존 이벤트가 있으면 제거
+  if (canvas._hasHoverEvent) {
+    canvas.removeEventListener('mousemove', canvas._hoverEventFn);
+    canvas.removeEventListener('click', canvas._clickEventFn);
+  }
+
+  canvas._hoverEventFn = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    let isPointer = false;
+    const chartArea = window.rankChartInstance.chartArea;
+    if (!chartArea) return;
+
+    // 왼쪽 텍스트 영역 (chartArea 밖)
+    if (x < chartArea.left) {
+      window.rankChartInstance.data.datasets.forEach((dataset, i) => {
+        const meta = window.rankChartInstance.getDatasetMeta(i);
+        if (meta.data.length > 0) {
+          const pointY = meta.data[0].y;
+          if (Math.abs(y - pointY) < 15) isPointer = true;
+        }
+      });
+    }
+    // 오른쪽 텍스트 영역 (chartArea 밖)
+    else if (x > chartArea.right) {
+      window.rankChartInstance.data.datasets.forEach((dataset, i) => {
+        const meta = window.rankChartInstance.getDatasetMeta(i);
+        if (meta.data.length > 0) {
+          const pointY = meta.data[meta.data.length - 1].y;
+          if (Math.abs(y - pointY) < 15) isPointer = true;
+        }
+      });
+    }
+    
+    canvas.style.cursor = isPointer ? 'pointer' : 'default';
+  };
+
+  canvas._clickEventFn = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const chartArea = window.rankChartInstance.chartArea;
+    if (!chartArea) return;
+
+    let clickedDatasetIndex = -1;
+    let minDistance = Infinity;
+
+    // 왼쪽 텍스트 영역 클릭 확인
+    if (x < chartArea.left) {
+      window.rankChartInstance.data.datasets.forEach((dataset, i) => {
+        const meta = window.rankChartInstance.getDatasetMeta(i);
+        if (meta.data.length > 0) {
+          const dist = Math.abs(y - meta.data[0].y);
+          if (dist < 15 && dist < minDistance) {
+            minDistance = dist;
+            clickedDatasetIndex = i;
+          }
+        }
+      });
+    }
+    // 오른쪽 텍스트 영역 클릭 확인
+    else if (x > chartArea.right) {
+      window.rankChartInstance.data.datasets.forEach((dataset, i) => {
+        const meta = window.rankChartInstance.getDatasetMeta(i);
+        if (meta.data.length > 0) {
+          const dist = Math.abs(y - meta.data[meta.data.length - 1].y);
+          if (dist < 15 && dist < minDistance) {
+            minDistance = dist;
+            clickedDatasetIndex = i;
+          }
+        }
+      });
+    }
+
+    if (clickedDatasetIndex !== -1) {
+      const keyword = window.rankChartInstance.data.datasets[clickedDatasetIndex].label;
+      searchInput.value = keyword.split('/')[0].trim();
+      handleSearch();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  canvas.addEventListener('mousemove', canvas._hoverEventFn);
+  canvas.addEventListener('click', canvas._clickEventFn);
+  canvas._hasHoverEvent = true;
   });
 }
 

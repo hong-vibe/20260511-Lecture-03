@@ -266,8 +266,8 @@ h1 {
   border: 1.5px solid #DCE4ED;
   border-radius: 12px;
   padding: 20px 16px;
-  min-height: 380px;
-  max-height: 420px;
+  min-height: 480px; /* 높이 확대 */
+  max-height: 520px;
   position: relative;
   min-width: 0;
   overflow: hidden;
