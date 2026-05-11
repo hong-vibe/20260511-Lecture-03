@@ -14,6 +14,10 @@ const translateBtn = document.getElementById('translateHintBtn');
 // 현재 번역 상태를 추적합니다. (false = 원문, true = 번역됨)
 let isTranslated = false;
 
+// 번역 데이터를 저장할 캐시 키와 객체를 초기화합니다.
+const TRANSLATION_CACHE_KEY = 'gitquest_translation_cache';
+let translationCache = JSON.parse(localStorage.getItem(TRANSLATION_CACHE_KEY)) || {};
+
 /**
  * 현재 브라우저가 내장 번역을 지원하는 Chromium 기반인지 확인합니다.
  * Chrome, Edge 등은 지원하고, Vivaldi, Brave 등은 제외합니다.
@@ -37,10 +41,31 @@ async function translateText(text, from = 'en', to = 'ko') {
   if (!text || text === '설명이 없습니다.' || /[가-힣]/.test(text)) {
     return text;
   }
-  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${from}|${to}`;
-  const res = await fetch(url);
-  const data = await res.json();
-  return data.responseData.translatedText;
+
+  // 1. 캐시에서 이미 번역된 결과가 있는지 먼저 찾아봅니다.
+  if (translationCache[text]) {
+    console.log('이미 번역된 데이터(캐시)를 사용합니다.');
+    return translationCache[text];
+  }
+
+  // 2. 캐시에 없다면 API를 호출합니다. (de 파라미터에 이메일을 넣어 한도를 5만자로 늘립니다)
+  const email = 'gitquest-dev@example.com'; 
+  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${from}|${to}&de=${email}`;
+  
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    const translatedText = data.responseData.translatedText;
+
+    // 3. 번역 결과를 캐시에 저장하고 로컬 스토리지에 동기화합니다.
+    translationCache[text] = translatedText;
+    localStorage.setItem(TRANSLATION_CACHE_KEY, JSON.stringify(translationCache));
+
+    return translatedText;
+  } catch (error) {
+    console.error('번역 API 호출 중 오류가 발생했습니다:', error);
+    return text; // 실패 시 원문을 그대로 보여줍니다.
+  }
 }
 
 /**
