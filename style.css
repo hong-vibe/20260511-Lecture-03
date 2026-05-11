@@ -149,12 +149,29 @@ h1 {
   text-decoration: underline; /* 링크에 마우스 올리면 밑줄 */
 }
 
-/* 별(Star) 개수 표시 부분 */
-.repo-card .stars {
-  font-size: 14px;
-  color: #ffd54f; /* 별은 노란색으로 강조 */
+/* 카드 안의 정보 줄 (언어, 별, 포크 배치) */
+.repo-info {
+  display: flex;
+  flex-wrap: wrap; /* 화면이 좁으면 다음 줄로 넘어가게 설정 */
+  gap: 12px;
+  font-size: 13px;
   font-weight: bold;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+}
+
+/* 언어 표시 스타일 */
+.repo-card .language {
+  color: #81c784; /* 연두색 */
+}
+
+/* 별(Star) 개수 표시 스타일 */
+.repo-card .stars {
+  color: #ffd54f; /* 노란색 */
+}
+
+/* 포크(Fork) 개수 표시 스타일 */
+.repo-card .forks {
+  color: #ff8a65; /* 연한 주황색 */
 }
 
 /* 저장소 설명 텍스트 */

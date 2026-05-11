@@ -68,20 +68,35 @@ async function searchRepositories(keyword) {
 }
 
 /**
- * 받아온 데이터 배열을 HTML 카드 형태로 만들어 화면에 표시합니다.
+ * 받아온 데이터 배열을 HTML 카드 형태로 만들어 화면에 표시합니다. (renderCards)
  * @param {Array} items - GitHub 저장소 데이터 배열
  */
 function renderCards(items) {
   items.forEach(repo => {
+    // 새로운 div 요소를 생성하여 카드 레이아웃을 만듭니다.
     const card = document.createElement('div');
     card.className = 'repo-card';
     
+    // 데이터가 null이거나 비어있을 경우를 대비해 기본 문구를 설정합니다.
+    const description = repo.description || '설명이 없습니다.';
+    const language = repo.language || '알 수 없음';
+    
+    // 천 단위로 콤마(,)를 찍어서 보기 좋게 포맷팅합니다.
+    const stars = repo.stargazers_count.toLocaleString();
+    const forks = repo.forks_count.toLocaleString();
+
+    // 카드 내부의 HTML 구조를 작성합니다.
     card.innerHTML = `
       <h3><a href="${repo.html_url}" target="_blank">${repo.name}</a></h3>
-      <div class="stars">⭐ ${repo.stargazers_count.toLocaleString()}</div>
-      <div class="description">${repo.description || '설명이 없습니다.'}</div>
+      <div class="repo-info">
+        <span class="language" title="주 사용 언어">🏷️ ${language}</span>
+        <span class="stars" title="Star 수">⭐ ${stars}</span>
+        <span class="forks" title="Fork 수">🍴 ${forks}</span>
+      </div>
+      <div class="description">${description}</div>
     `;
     
+    // 완성된 카드를 목록(repoList)에 추가합니다.
     repoList.appendChild(card);
   });
 }
