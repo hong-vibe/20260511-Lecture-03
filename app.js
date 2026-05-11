@@ -5,6 +5,90 @@ const searchInput = document.getElementById('searchInput');
 const searchBtn = document.getElementById('searchButton');
 const statusMessage = document.getElementById('statusMessage');
 const repoList = document.getElementById('repoList');
+const translateBtn = document.getElementById('translateHintBtn');
+
+// -------------------------------------------------------------------
+// 번역 기능 관련 변수 및 함수
+// -------------------------------------------------------------------
+
+// 현재 번역 상태를 추적합니다. (false = 원문, true = 번역됨)
+let isTranslated = false;
+
+/**
+ * 현재 브라우저가 내장 번역을 지원하는 Chromium 기반인지 확인합니다.
+ * Chrome, Edge 등은 지원하고, Vivaldi, Brave 등은 제외합니다.
+ * @returns {boolean} - 번역 기능 지원 여부
+ */
+function isTranslationSupported() {
+  const ua = navigator.userAgent;
+  // Chrome 문자열이 포함되고, Vivaldi나 Brave가 아닌 경우
+  return /Chrome/.test(ua) && !/Vivaldi|Brave/.test(ua);
+}
+
+/**
+ * MyMemory 무료 번역 API를 호출하여 텍스트를 번역합니다.
+ * @param {string} text - 번역할 원문 텍스트
+ * @param {string} from - 원본 언어 코드 (기본: 'en')
+ * @param {string} to - 대상 언어 코드 (기본: 'ko')
+ * @returns {Promise<string>} - 번역된 텍스트
+ */
+async function translateText(text, from = 'en', to = 'ko') {
+  // 텍스트가 비어있거나 한글이면 번역하지 않습니다.
+  if (!text || text === '설명이 없습니다.' || /[가-힣]/.test(text)) {
+    return text;
+  }
+  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${from}|${to}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  return data.responseData.translatedText;
+}
+
+/**
+ * 화면의 모든 카드 설명을 한글로 번역하거나 원문으로 복원합니다.
+ */
+async function toggleTranslation() {
+  const descriptions = document.querySelectorAll('.description');
+  
+  // 번역할 카드가 없으면 아무것도 하지 않습니다.
+  if (descriptions.length === 0) return;
+
+  // 버튼 상태 변경 (번역 중 표시)
+  translateBtn.disabled = true;
+  translateBtn.textContent = '⏳ 번역 중...';
+
+  if (!isTranslated) {
+    // --- 영문 → 한글 번역 ---
+    try {
+      for (const el of descriptions) {
+        // 원문을 data-original 속성에 저장해 둡니다. (나중에 복원용)
+        if (!el.dataset.original) {
+          el.dataset.original = el.textContent;
+        }
+        // MyMemory API로 번역합니다.
+        const translated = await translateText(el.textContent);
+        el.textContent = translated;
+      }
+      isTranslated = true;
+      translateBtn.textContent = '🌐 원문 보기';
+      translateBtn.classList.add('active');
+    } catch (error) {
+      console.error('번역 오류:', error);
+      translateBtn.textContent = '🌐 번역';
+    }
+  } else {
+    // --- 한글 → 영문 원문 복원 ---
+    descriptions.forEach(el => {
+      if (el.dataset.original) {
+        el.textContent = el.dataset.original;
+      }
+    });
+    isTranslated = false;
+    translateBtn.textContent = '🌐 번역';
+    translateBtn.classList.remove('active');
+  }
+
+  translateBtn.disabled = false;
+}
 
 /**
  * GitHub API를 호출하여 저장소 데이터를 가져오는 비동기 함수입니다. (fetchRepos)
@@ -134,4 +218,15 @@ searchInput.addEventListener('keypress', (event) => {
     handleSearch();
   }
 });
+
+// 번역 버튼 클릭 시 번역/원문 토글
+translateBtn.addEventListener('click', toggleTranslation);
+
+// -------------------------------------------------------------------
+// 페이지 로드 시 초기화
+// -------------------------------------------------------------------
+// 브라우저가 번역을 지원하면 번역 버튼을 보이게 합니다.
+if (isTranslationSupported()) {
+  translateBtn.classList.remove('hidden');
+}
 
