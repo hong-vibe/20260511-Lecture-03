@@ -32,46 +32,10 @@ async function fetchRepos(keyword) {
 }
 
 /**
- * 사용자 화면에 검색 진행 상태를 보여주고 결과를 처리하는 함수입니다.
- * @param {string} keyword - 검색할 키워드
- */
-async function searchRepositories(keyword) {
-  // 검색 시작 시 화면 상태 메시지를 업데이트하고 이전 결과를 지웁니다.
-  statusMessage.className = 'status-message';
-  statusMessage.textContent = '⏳ 검색 중... 데이터를 불러오고 있습니다.';
-  repoList.innerHTML = ''; 
-
-  try {
-    // 1. fetchRepos 함수를 호출하여 실제 데이터를 비동기적으로 가져옵니다.
-    const data = await fetchRepos(keyword);
-
-    // 2. 검색 결과가 하나도 없는 경우를 처리합니다.
-    if (data.items.length === 0) {
-      statusMessage.className = 'status-message';
-      statusMessage.textContent = `🤔 '${keyword}'에 대한 검색 결과가 없습니다.`;
-      return;
-    }
-    
-    // 3. 검색 성공 시 상태를 업데이트합니다.
-    statusMessage.className = 'status-message';
-    statusMessage.textContent = `✅ '${keyword}'에 대한 검색을 완료했습니다. (${data.items.length}개 표시)`;
-    
-    // 4. 받아온 데이터(data.items)를 화면에 카드 형태로 그리는 함수를 호출합니다.
-    renderCards(data.items);
-
-  } catch (error) {
-    // 에러가 발생한 경우(네트워크 문제 등) 콘솔에 기록하고 사용자에게 알립니다.
-    console.error('검색 중 에러 발생:', error);
-    statusMessage.className = 'status-message error';
-    statusMessage.textContent = '🚨 데이터를 불러오는 데 실패했습니다.';
-  }
-}
-
-/**
- * 받아온 데이터 배열을 HTML 카드 형태로 만들어 화면에 표시합니다. (renderCards)
+ * 받아온 데이터 배열을 HTML 카드 형태로 만들어 화면에 표시합니다. (renderRepos)
  * @param {Array} items - GitHub 저장소 데이터 배열
  */
-function renderCards(items) {
+function renderRepos(items) {
   items.forEach(repo => {
     // 새로운 div 요소를 생성하여 카드 레이아웃을 만듭니다.
     const card = document.createElement('div');
@@ -102,25 +66,46 @@ function renderCards(items) {
 }
 
 /**
- * 검색을 통합해서 관리하는 함수입니다. (handleSearch)
- * 공통된 검색 로직을 이곳에 모아 중복 코드를 줄입니다.
+ * 검색을 통합해서 관리하는 비동기 함수입니다. (handleSearch)
+ * 입력값 검증, 데이터 요청, 화면 렌더링을 모두 제어합니다.
  */
-function handleSearch() {
+async function handleSearch() {
   // 1. 입력창(searchInput)에 적힌 텍스트를 가져오고, trim()으로 앞뒤 공백을 없앱니다.
   const keyword = searchInput.value.trim();
   
   // 2. 만약 공백을 다 지웠는데도 텍스트가 비어있다면 (빈 문자열이라면)
   if (keyword === "") {
-    // 3. 상태 메시지 영역(statusMessage)에 에러 스타일을 적용하고 문구를 띄웁니다.
+    // 상태 메시지 영역(statusMessage)에 에러 스타일을 적용하고 문구를 띄웁니다.
     statusMessage.className = 'status-message error';
     statusMessage.textContent = '⚠️ 검색어를 입력해 주세요.';
     repoList.innerHTML = ''; // 이전 검색 결과 화면에서 지우기
   } else {
-    // 4. 입력값이 정상적으로 있다면 개발자 도구 콘솔창(F12)에 검색어를 출력합니다.
     console.log("검색어:", keyword);
     
-    // (기존에 만들어둔 GitHub API 검색 함수를 실행하여 화면에 결과를 그립니다)
-    searchRepositories(keyword);
+    // 검색 시작 시 화면 상태 메시지 업데이트
+    statusMessage.className = 'status-message';
+    statusMessage.textContent = '⏳ 검색 중...';
+    repoList.innerHTML = '';
+
+    try {
+      // 3. fetchRepos 함수로 데이터를 가져옵니다.
+      const data = await fetchRepos(keyword);
+
+      if (data.items.length === 0) {
+        statusMessage.textContent = `🤔 '${keyword}'에 대한 결과가 없습니다.`;
+        return;
+      }
+
+      // 4. 받아온 데이터를 renderRepos 함수에 전달하여 화면에 그립니다.
+      statusMessage.textContent = `✅ '${keyword}' 검색 완료!`;
+      renderRepos(data.items);
+
+    } catch (error) {
+      // 5. 오류 처리는 요구사항에 따라 console.error로 유지합니다.
+      console.error('검색 중 오류 발생:', error);
+      statusMessage.className = 'status-message error';
+      statusMessage.textContent = '🚨 오류가 발생했습니다.';
+    }
   }
 }
 
